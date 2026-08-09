@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="en" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><style>@layer base{html,body{margin:0;padding:0;background-color:#0b1326;color:#dae2fd;overflow:hidden;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"surface-container":"#171f33","surface-container-low":"#131b2e","surface-dim":"#0b1326","secondary-fixed-dim":"#eec200","on-tertiary-fixed":"#2a1800","on-error":"#690005","error":"#ffb4ab","surface-bright":"#31394d","on-background":"#dae2fd","on-primary-container":"#005763","surface":"#0b1326","on-surface":"#dae2fd","primary-fixed-dim":"#2fd9f4","secondary":"#ffe083","tertiary-container":"#ffb13b","primary":"#8aebff","tertiary-fixed":"#ffddb5","on-error-container":"#ffdad6","primary-container":"#22d3ee","surface-container-lowest":"#060e20","surface-variant":"#2d3449","on-primary-fixed":"#001f25","tertiary":"#ffd6a3","secondary-fixed":"#ffe083","on-secondary-fixed-variant":"#574500","background":"#0b1326","on-tertiary-fixed-variant":"#643f00","on-tertiary":"#462b00","on-primary-fixed-variant":"#004e5a","secondary-container":"#eec200","on-tertiary-container":"#6e4600","outline":"#859397","outline-variant":"#3c494c","on-primary":"#00363e","inverse-primary":"#006877","surface-tint":"#2fd9f4","on-secondary-container":"#645000","on-secondary-fixed":"#231b00","inverse-surface":"#dae2fd","surface-container-high":"#222a3d","on-surface-variant":"#bbc9cd","tertiary-fixed-dim":"#ffb957","on-secondary":"#3c2f00","error-container":"#93000a","inverse-on-surface":"#283044","primary-fixed":"#a2eeff","surface-container-highest":"#2d3449"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"stack-sm":"1rem","focus-outline":"4px","gutter-y":"3rem","stack-md":"2rem","margin-edge":"5rem","gutter-x":"2rem"},"fontFamily":{"headline-md":["Inter"],"body-md":["Inter"],"label-lg":["Inter"],"headline-lg":["Inter"],"label-sm":["Inter"],"display-lg":["Inter"],"body-lg":["Inter"]},"fontSize":{"headline-md":["32px",{"lineHeight":"40px","fontWeight":"600"}],"body-md":["20px",{"lineHeight":"30px","fontWeight":"400"}],"label-lg":["18px",{"lineHeight":"24px","letterSpacing":"0.05em","fontWeight":"600"}],"headline-lg":["48px",{"lineHeight":"56px","fontWeight":"700"}],"label-sm":["14px",{"lineHeight":"16px","letterSpacing":"0.1em","fontWeight":"700"}],"display-lg":["72px",{"lineHeight":"80px","letterSpacing":"-0.02em","fontWeight":"800"}],"body-lg":["24px",{"lineHeight":"36px","fontWeight":"400"}]}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"></head><body class="bg-background font-body-md text-on-background">
+<main class="relative w-screen h-screen bg-surface-container-lowest z-0 overflow-hidden"><div class="flex flex-col w-full h-full relative cursor-none" id="player-container">
+<!-- Full-screen Video Background -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center" id="video-layer" style="background-image: url('https://lh3.googleusercontent.com/aida/AP1WRLusdq7Z0NYO42Z1gOmPpGBEsAyY56wcrFf078ExO_uEuiQBAqOAZqvHfbZUlgAG-XlSkh8sZ07JomEVpecrJUjSJcmRrDkla6NQ10JVZ6-TBp-ZvvBewVJxYhE624utoMg1-3j_Yyb2gzvO0dDFwEjPwNH8ppV1V2aICEr9iG-JfSlneZQcUC9LT8CCIiuhJ4i9FBECFtNGEklPPynRA8OEeRUAGi7_UMsbpUmI0_hid7lXJDRX79QDx9l-');"></div>
+<!-- Subtle Dark Gradient Top Scrim -->
+<div class="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-surface-dim/90 to-transparent z-10 pointer-events-none transition-opacity duration-500 ui-element opacity-0"></div>
+<!-- Subtle Dark Gradient Bottom Scrim -->
+<div class="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-surface-dim/95 to-transparent z-10 pointer-events-none transition-opacity duration-500 ui-element opacity-0"></div>
+<!-- Top Header Area -->
+<div class="absolute top-0 left-0 w-full p-margin-edge flex justify-between items-start z-20 transition-opacity duration-500 ui-element opacity-0">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 bg-primary rounded-xl flex items-center justify-center shadow-lg"><span class="material-symbols-outlined text-[40px] text-on-primary">play_arrow</span></div>
+<div class="flex flex-col">
+<h1 class="text-headline-lg font-headline-lg text-on-surface drop-shadow-md leading-none">Mido TV</h1>
+
+<h2 class="text-body-lg font-body-lg text-on-surface-variant mt-1">S1:E4 • The Silent Protocol</h2></div>
+</div>
+
+</div>
+<!-- Right Side Jump Cues -->
+<div class="absolute right-0 p-margin-edge flex flex-col gap-6 z-20 transition-opacity duration-500 ui-element opacity-0 top-0">
+<div class="flex items-center gap-5 bg-surface-container/80 backdrop-blur-md pl-3 pr-8 py-4 rounded-r-xl rounded-l-lg border-l-4 border-transparent hover:border-secondary hover:bg-surface-container transition-all cursor-pointer group">
+<div class="w-10 h-10 bg-secondary rounded flex items-center justify-center text-on-secondary font-body-lg font-bold group-hover:shadow-[0_0_12px_rgba(255,224,131,0.6)]">1</div>
+<span class="text-body-lg font-body-lg text-on-surface">Jump 10s</span>
+</div>
+<div class="flex items-center gap-5 bg-surface-container/80 backdrop-blur-md pl-3 pr-8 py-4 rounded-r-xl rounded-l-lg border-l-4 border-transparent hover:border-secondary hover:bg-surface-container transition-all cursor-pointer group">
+<div class="w-10 h-10 bg-secondary rounded flex items-center justify-center text-on-secondary font-body-lg font-bold group-hover:shadow-[0_0_12px_rgba(255,224,131,0.6)]">5</div>
+<span class="text-body-lg font-body-lg text-on-surface">Jump 50s</span>
+</div>
+
+<div class="flex items-center gap-5 bg-surface-container/80 backdrop-blur-md pl-3 pr-8 py-4 rounded-r-xl rounded-l-lg border-l-4 border-transparent hover:border-secondary hover:bg-surface-container transition-all cursor-pointer group">
+<div class="w-10 h-10 bg-secondary rounded flex items-center justify-center text-on-secondary font-body-lg font-bold group-hover:shadow-[0_0_12px_rgba(255,224,131,0.6)]">0</div>
+<span class="text-body-lg font-body-lg text-on-surface">Back to Menu</span>
+</div>
+<div class="flex items-center gap-5 bg-surface-container/80 backdrop-blur-md pl-3 pr-8 py-4 rounded-r-xl rounded-l-lg border-l-4 border-transparent hover:border-secondary hover:bg-surface-container transition-all cursor-pointer group">
+<div class="w-10 h-10 bg-secondary rounded flex items-center justify-center text-on-secondary font-body-lg font-bold group-hover:shadow-[0_0_12px_rgba(255,224,131,0.6)]">OK</div>
+<span class="text-body-lg font-body-lg text-on-surface">Play / Pause</span>
+</div>
+<div class="flex items-center gap-5 bg-surface-container/80 backdrop-blur-md pl-3 pr-8 py-4 rounded-r-xl rounded-l-lg border-l-4 border-transparent hover:border-secondary hover:bg-surface-container transition-all cursor-pointer group">
+<div class="w-10 h-10 bg-secondary rounded flex items-center justify-center text-on-secondary font-body-lg font-bold group-hover:shadow-[0_0_12px_rgba(255,224,131,0.6)]">3</div>
+<span class="text-body-lg font-body-lg text-on-surface">Aspect Ratio</span>
+</div></div>
+<!-- Bottom OSD Control Bar -->
+<div class="absolute bottom-0 left-0 w-full px-margin-edge pb-margin-edge pt-8 z-20 transition-opacity duration-500 ui-element flex flex-col gap-6 bg-gradient-to-t from-surface-dim/95 via-surface-dim/80 to-transparent opacity-0">
+<!-- Transport Controls & Legend -->
+<div class="flex items-end mb-4 justify-center">
+
+<!-- Central Transport -->
+<div class="flex justify-center items-center gap-10">
+<!-- Rewind -->
+
+<!-- Play/Pause (Focused State) -->
+<button class="w-28 h-28 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-[0_0_30px_rgba(138,235,255,0.6)] scale-110 border-4 border-primary-fixed ring-4 ring-primary-container ring-offset-4 ring-offset-surface-dim transition-all focus:outline-none">
+<span class="material-symbols-outlined text-[64px]" style="font-variation-settings: &quot;FILL&quot; 1;">pause</span>
+</button>
+<!-- Fast Forward -->
+
+</div>
+<!-- Bottom Legend Mapping -->
+
+</div>
+<!-- Progress Bar Section -->
+<div class="flex flex-col gap-2 w-full"><div class="flex justify-between items-end mb-1"><span class="text-body-lg font-body-lg text-on-surface drop-shadow-md">29:00 -&gt; 45:12</span></div>
+<div class="w-full h-4 bg-surface-variant/90 backdrop-blur-sm rounded-full overflow-hidden shadow-inner relative group cursor-pointer border border-outline-variant/30">
+<!-- Progress Fill -->
+<div class="absolute top-0 left-0 h-full w-[53.5%] bg-primary shadow-[0_0_20px_rgba(138,235,255,0.9)] rounded-r-full transition-all duration-300"></div>
+</div>
+</div>
+</div>
+<script>
+    // Simple 3-second auto-hide logic for UI elements to simulate 10-foot experience
+    let timeoutId;
+    const uiElements = document.querySelectorAll('.ui-element');
+    const container = document.getElementById('player-container');
+
+    function resetTimer() {
+      uiElements.forEach(el => el.classList.remove('opacity-0'));
+      container.classList.remove('cursor-none');
+      
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        uiElements.forEach(el => el.classList.add('opacity-0'));
+        container.classList.add('cursor-none');
+      }, 3000);
+    }
+
+    container.addEventListener('mousemove', resetTimer);
+    container.addEventListener('keydown', resetTimer);
+    container.addEventListener('click', resetTimer);
+    
+    // Initial call to start the timer
+    resetTimer();
+  </script>
+</div></main>
+
+
+</body></html>

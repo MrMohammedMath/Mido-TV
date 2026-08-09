@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #0b1326;
+    color: #dae2fd;
+    overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* TV Focus rings and subtle animations */
+.tv-focus-glow {
+  box-shadow: 0 0 20px rgba(47, 217, 244, 0.6);
+}
+
+.tv-badge-glow {
+  box-shadow: 0 0 12px rgba(255, 224, 131, 0.6);
+}
