@@ -1,6 +1,7 @@
 import React from 'react';
+import { getPlaybackProgress } from '../services/fileScanner';
 
-export const GridCard = React.memo(({ item, slotIndex, isFocused, onClick }) => {
+export const GridCard = React.memo(({ item, slotIndex, isFocused, playbackHistory, onClick }) => {
   if (!item) {
     // Empty slot place-holder (keeps 3x3 layout stable)
     return (
@@ -13,6 +14,18 @@ export const GridCard = React.memo(({ item, slotIndex, isFocused, onClick }) => 
   const badgeNumber = slotIndex + 1; // 1-9
   const isSingleVideoFolder = item.isSingleVideoFolder || !!item.singleVideoPath;
   const isFolder = (item.type === 'folder' || item.isDirectory) && !isSingleVideoFolder;
+  const isVideo = !isFolder;
+  const videoPath = item.singleVideoPath || item.path;
+
+  // Retrieve playback history & calculate percentage
+  let percentViewed = 0;
+  if (isVideo && videoPath) {
+    const progress = playbackHistory ? playbackHistory[videoPath] : getPlaybackProgress(videoPath);
+    if (progress && progress.duration > 0 && progress.timestamp > 0) {
+      percentViewed = Math.min(100, Math.max(0, Math.round((progress.timestamp / progress.duration) * 100)));
+    }
+  }
+
   const coverUrl = item.coverUrl;
   const aspectRatioClass = 'aspect-[2/3]';
   const displayName = item.name ? item.name.replace(/\.(mp4|mkv|avi|mov|webm|m4v|ts|flv|wmv)$/i, '') : '';
@@ -42,7 +55,7 @@ export const GridCard = React.memo(({ item, slotIndex, isFocused, onClick }) => 
       )}
 
       {/* Dark gradient overlay for text contrast */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/40 to-transparent z-10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/60 via-45% to-transparent z-10" />
 
       {/* Numerical Badge 1-5 */}
       <div className="absolute top-4 left-4 z-20 w-11 h-11 flex items-center justify-center bg-secondary text-on-secondary rounded-lg shadow-md font-display-lg text-headline-md leading-none font-bold">
@@ -71,18 +84,50 @@ export const GridCard = React.memo(({ item, slotIndex, isFocused, onClick }) => 
           {displayName}
         </h3>
 
-        {!isFolder && (item.year || item.duration) && (
-          <div className="flex items-center gap-2 mt-2">
-            {item.year && (
-              <span className="text-xs font-bold text-on-surface-variant bg-surface-container-highest/80 px-2 py-0.5 rounded">
-                {item.year}
+        {/* Video Metadata & Progress Bar */}
+        {!isFolder && (
+          <div className="w-full mt-2 flex flex-col gap-1.5">
+            {/* Metadata chips & Percentage viewed badge */}
+            <div className={`flex items-center gap-2 w-full ${isArabic ? 'flex-row-reverse justify-between' : 'justify-between'}`}>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {item.year && (
+                  <span className="text-[11px] font-bold text-on-surface-variant bg-surface-container-highest/90 px-2 py-0.5 rounded">
+                    {item.year}
+                  </span>
+                )}
+                {item.duration && (
+                  <span className="text-[11px] font-bold text-on-surface-variant bg-surface-container-highest/90 px-2 py-0.5 rounded">
+                    {item.duration}
+                  </span>
+                )}
+              </div>
+
+              {/* Percentage Viewed Badge */}
+              <span
+                className={`text-[11px] font-bold px-2 py-0.5 rounded flex items-center gap-1 backdrop-blur-md transition-all ${
+                  percentViewed > 0
+                    ? 'text-primary bg-primary/20 border border-primary/40 shadow-[0_0_8px_rgba(47,217,244,0.3)]'
+                    : 'text-on-surface-variant/60 bg-surface-container-highest/60 border border-white/5'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[12px] leading-none">
+                  {percentViewed >= 95 ? 'check_circle' : percentViewed > 0 ? 'play_arrow' : 'schedule'}
+                </span>
+                <span>{percentViewed > 0 ? `${percentViewed}% viewed` : '0% viewed'}</span>
               </span>
-            )}
-            {item.duration && (
-              <span className="text-xs font-bold text-on-surface-variant bg-surface-container-highest/80 px-2 py-0.5 rounded">
-                {item.duration}
-              </span>
-            )}
+            </div>
+
+            {/* In-Card Progress Bar Track */}
+            <div className="w-full h-2 bg-surface-container-highest/80 rounded-full overflow-hidden border border-white/15 backdrop-blur-md relative mt-0.5">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  percentViewed > 0
+                    ? 'bg-gradient-to-r from-primary via-primary-container to-secondary shadow-[0_0_10px_rgba(47,217,244,0.85)]'
+                    : 'w-0'
+                }`}
+                style={{ width: `${percentViewed}%` }}
+              />
+            </div>
           </div>
         )}
       </div>

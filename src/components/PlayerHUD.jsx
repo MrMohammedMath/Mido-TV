@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 
 function formatTime(seconds) {
-  if (!seconds || isNaN(seconds)) return '00:00';
+  if (!seconds || isNaN(seconds) || !isFinite(seconds) || seconds < 0) return '00:00';
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   const hrs = Math.floor(mins / 60);
@@ -24,15 +24,23 @@ export const PlayerHUD = React.memo(({
   onGoBack,
   onToggleFullscreen
 }) => {
-  const { isPlaying, currentTime, duration, aspectLabel } = videoState;
+  const { isPlaying, currentTime, duration, aspectLabel, bufferRange, bufferedPercent = 0 } = videoState;
   const progressBarRef = useRef(null);
 
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const validDuration = duration && isFinite(duration) ? duration : 0;
+  const progressPercent = validDuration > 0 ? (currentTime / validDuration) * 100 : 0;
+  
+  // Real physical buffer from HTML5 video.buffered
+  const bufferStart = bufferRange?.startPercent ?? 0;
+  const realBufferEnd = bufferRange?.endPercent ?? bufferedPercent;
+  const bufferEnd = Math.max(progressPercent, realBufferEnd);
+  const bufferWidth = Math.max(0, bufferEnd - bufferStart);
+  const forwardSeconds = Math.max(0, Math.round(bufferRange?.forwardSeconds ?? ((bufferEnd - progressPercent) * (validDuration / 100))));
 
   const handleTimelineClick = (e) => {
     e.stopPropagation();
     onActivity?.();
-    if (!progressBarRef.current || !duration) return;
+    if (!progressBarRef.current || !validDuration) return;
     const rect = progressBarRef.current.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
@@ -154,17 +162,32 @@ export const PlayerHUD = React.memo(({
             <span className="text-body-lg font-body-lg text-on-surface drop-shadow-md font-mono">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
+            {duration > 0 && (
+              <span className="text-body-md font-body-md text-on-surface-variant font-mono drop-shadow-md">
+                -{formatTime(Math.max(0, duration - currentTime))}
+              </span>
+            )}
           </div>
 
           {/* Interactive Timeline Progress Bar */}
           <div
             ref={progressBarRef}
             onClick={handleTimelineClick}
-            className="w-full h-5 bg-surface-variant/90 backdrop-blur-sm rounded-full overflow-hidden shadow-inner relative border border-outline-variant/40 cursor-pointer group hover:h-6 transition-all"
-            title="Click to seek"
+            className="w-full h-5 bg-white/20 backdrop-blur-sm rounded-full overflow-hidden shadow-inner relative border border-outline-variant/40 cursor-pointer group hover:h-6 transition-all"
+            title={`Click to seek • Forward Buffer: ${forwardSeconds}s`}
           >
+            {/* Buffer Bar (Accurately reflecting Backward Garbage Collection & Forward Cushion) */}
             <div
-              className="absolute top-0 left-0 h-full bg-primary shadow-[0_0_20px_rgba(138,235,255,0.9)] rounded-r-full transition-all duration-150"
+              className="absolute top-0 h-full bg-white/40 transition-all duration-300 pointer-events-none"
+              style={{
+                left: `${bufferStart}%`,
+                width: `${bufferWidth}%`
+              }}
+            />
+
+            {/* Playback Progress Bar (Cyan, right corner not rounded) */}
+            <div
+              className="absolute top-0 left-0 h-full bg-primary shadow-[0_0_20px_rgba(138,235,255,0.9)] rounded-r-none border-r-2 border-white transition-all duration-150 z-10 pointer-events-none"
               style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }}
             />
           </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { GridCard } from './GridCard';
 
-export const Grid3x3 = React.memo(({ items, currentPage, totalPages, focusedSlotIndex, onItemClick }) => {
+export const Grid3x3 = React.memo(({ items, currentPage, totalPages, focusedSlotIndex, playbackHistory, onItemClick }) => {
   // Extract active 5 items for current page in 1 row
   const ITEMS_PER_PAGE = 5;
   const startIndex = currentPage * ITEMS_PER_PAGE;
@@ -20,6 +20,7 @@ export const Grid3x3 = React.memo(({ items, currentPage, totalPages, focusedSlot
             item={item}
             slotIndex={slotIndex}
             isFocused={slotIndex === focusedSlotIndex}
+            playbackHistory={playbackHistory}
             onClick={onItemClick}
           />
         ))}

@@ -48,16 +48,33 @@ export function getPlaybackProgress(filePath) {
   return history[filePath] || null;
 }
 
+export function getVideoProgressPercentage(filePath) {
+  if (!filePath) return 0;
+  const progress = getPlaybackProgress(filePath);
+  if (!progress || !progress.duration || progress.duration <= 0 || !progress.timestamp) return 0;
+  const pct = Math.round((progress.timestamp / progress.duration) * 100);
+  return Math.min(100, Math.max(0, pct));
+}
+
 export function savePlaybackProgress(filePath, timestamp, duration) {
   if (!filePath) return;
   try {
     const history = getPlaybackHistory();
+    const validDuration = Math.max(0, Math.floor(duration));
+    let validTimestamp = Math.max(0, Math.floor(timestamp));
+    // If the video was watched to within 5 seconds of the end, reset saved position to beginning
+    if (validDuration > 0 && validTimestamp >= validDuration - 5) {
+      validTimestamp = 0;
+    }
     history[filePath] = {
-      timestamp: Math.max(0, Math.floor(timestamp)),
-      duration: Math.max(0, Math.floor(duration)),
+      timestamp: validTimestamp,
+      duration: validDuration,
       updatedAt: Date.now()
     };
     localStorage.setItem(PLAYBACK_KEY, JSON.stringify(history));
+    window.dispatchEvent(new CustomEvent('mido-tv-playback-updated', {
+      detail: { filePath, timestamp: validTimestamp, duration: validDuration }
+    }));
   } catch (e) {
     console.error('Error saving progress:', e);
   }

@@ -219,39 +219,128 @@ function tvFilesystemPlugin() {
       res.end('Cover not found');
     });
 
-    // 3. Video Streaming endpoint with HTTP Byte Range support
+    // 3. Video Streaming endpoint with proper HTTP Byte Range support
     server.middlewares.use('/api/stream', (req, res) => {
       const urlObj = new URL(req.url, `http://${req.headers.host}`);
       const videoPath = urlObj.searchParams.get('path');
 
       if (videoPath && fs.existsSync(videoPath)) {
-        const stat = fs.statSync(videoPath);
-        const fileSize = stat.size;
-        const range = req.headers.range;
+        try {
+          const stat = fs.statSync(videoPath);
+          if (!stat.isFile()) {
+            res.statusCode = 404;
+            return res.end('Not a file');
+          }
 
-        if (range) {
-          const parts = range.replace(/bytes=/, "").split("-");
-          const start = parseInt(parts[0], 10);
-          const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-          const chunksize = (end - start) + 1;
-          const file = fs.createReadStream(videoPath, { start, end });
-          const head = {
-            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-            'Accept-Ranges': 'bytes',
-            'Content-Length': chunksize,
-            'Content-Type': 'video/mp4',
+          const fileSize = stat.size;
+          const ext = path.extname(videoPath).toLowerCase();
+          const mimeTypes = {
+            '.mp4': 'video/mp4',
+            '.m4v': 'video/mp4',
+            '.mkv': 'video/x-matroska',
+            '.webm': 'video/webm',
+            '.mov': 'video/quicktime',
+            '.ts': 'video/mp2t',
+            '.avi': 'video/x-msvideo',
+            '.flv': 'video/x-flv',
+            '.wmv': 'video/x-ms-wmv',
+            '.ogv': 'video/ogg'
           };
-          res.writeHead(206, head);
-          file.pipe(res);
-          return;
-        } else {
-          const head = {
-            'Content-Length': fileSize,
-            'Content-Type': 'video/mp4',
-          };
-          res.writeHead(200, head);
-          fs.createReadStream(videoPath).pipe(res);
-          return;
+          const contentType = mimeTypes[ext] || 'video/mp4';
+          const range = req.headers.range;
+
+          if (range) {
+            const parts = range.replace(/bytes=/, "").trim().split("-");
+            let start = parseInt(parts[0], 10);
+            let end = parts[1] && parts[1].trim() !== "" ? parseInt(parts[1], 10) : fileSize - 1;
+
+            if (isNaN(start)) {
+              const suffix = parseInt(parts[1], 10);
+              if (!isNaN(suffix) && suffix > 0) {
+                start = Math.max(0, fileSize - suffix);
+                end = fileSize - 1;
+              } else {
+                start = 0;
+              }
+            }
+
+            if (isNaN(end) || end >= fileSize) {
+              end = fileSize - 1;
+            }
+
+            // Return 416 Range Not Satisfiable if requested range is out of bounds
+            if (start >= fileSize || start < 0 || start > end) {
+              res.writeHead(416, {
+                'Content-Range': `bytes */${fileSize}`,
+                'Accept-Ranges': 'bytes'
+              });
+              return res.end();
+            }
+
+            const chunksize = (end - start) + 1;
+            const head = {
+              'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+              'Accept-Ranges': 'bytes',
+              'Content-Length': chunksize,
+              'Content-Type': contentType,
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Connection': 'keep-alive',
+            };
+
+            if (req.method === 'HEAD') {
+              res.writeHead(206, head);
+              return res.end();
+            }
+
+            const file = fs.createReadStream(videoPath, { start, end });
+            file.on('error', (err) => {
+              if (!res.headersSent) {
+                res.statusCode = 500;
+              }
+              res.end();
+            });
+
+            res.on('close', () => {
+              file.destroy();
+            });
+
+            res.writeHead(206, head);
+            file.pipe(res);
+            return;
+          } else {
+            const head = {
+              'Content-Length': fileSize,
+              'Content-Type': contentType,
+              'Accept-Ranges': 'bytes',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Connection': 'keep-alive',
+            };
+
+            if (req.method === 'HEAD') {
+              res.writeHead(200, head);
+              return res.end();
+            }
+
+            const file = fs.createReadStream(videoPath);
+            file.on('error', () => {
+              if (!res.headersSent) {
+                res.statusCode = 500;
+              }
+              res.end();
+            });
+
+            res.on('close', () => {
+              file.destroy();
+            });
+
+            res.writeHead(200, head);
+            file.pipe(res);
+            return;
+          }
+        } catch (e) {
+          console.error('Error streaming video:', e);
+          res.statusCode = 500;
+          return res.end('Streaming error');
         }
       }
 
@@ -259,10 +348,90 @@ function tvFilesystemPlugin() {
       res.writeHead(302, { Location: SAMPLE_VIDEO_URL });
       res.end();
     });
+
+    // 4. Server Time endpoint (accurate server clock sync for TV clients)
+    server.middlewares.use('/api/time', (req, res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', '*');
+
+      if (req.method === 'OPTIONS') {
+        res.statusCode = 204;
+        return res.end();
+      }
+
+      const now = new Date();
+      let timeZone = 'UTC';
+      try {
+        timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      } catch (e) {}
+
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+      const h12 = hours % 12 || 12;
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const mStr = minutes < 10 ? `0${minutes}` : `${minutes}`;
+      const hStr24 = hours < 10 ? `0${hours}` : `${hours}`;
+      const sStr = seconds < 10 ? `0${seconds}` : `${seconds}`;
+
+      const payload = JSON.stringify({
+        serverTime: now.getTime(),
+        timezoneOffset: now.getTimezoneOffset(), // difference in minutes: UTC - local
+        timeZone: timeZone,
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+        formatted12: `${h12}:${mStr} ${ampm}`,
+        formatted12WithSec: `${h12}:${mStr}:${sStr} ${ampm}`,
+        formatted24: `${hStr24}:${mStr}`,
+        formatted24WithSec: `${hStr24}:${mStr}:${sStr}`,
+        iso: now.toISOString()
+      });
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.end(payload);
+    });
   }
 
   return {
     name: 'tv-filesystem-plugin',
+    transformIndexHtml(html) {
+      const now = new Date();
+      let timeZone = 'UTC';
+      try {
+        timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      } catch (e) {}
+
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+      const h12 = hours % 12 || 12;
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const mStr = minutes < 10 ? `0${minutes}` : `${minutes}`;
+      const hStr24 = hours < 10 ? `0${hours}` : `${hours}`;
+      const sStr = seconds < 10 ? `0${seconds}` : `${seconds}`;
+
+      const payload = JSON.stringify({
+        serverTime: now.getTime(),
+        timezoneOffset: now.getTimezoneOffset(),
+        timeZone: timeZone,
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+        formatted12: `${h12}:${mStr} ${ampm}`,
+        formatted12WithSec: `${h12}:${mStr}:${sStr} ${ampm}`,
+        formatted24: `${hStr24}:${mStr}`,
+        formatted24WithSec: `${hStr24}:${mStr}:${sStr}`,
+        iso: now.toISOString()
+      });
+
+      const script = `<script id="__SERVER_TIME_INIT__">window.__INITIAL_SERVER_TIME__ = ${payload};</script>`;
+      return html.replace('</head>', `${script}\n</head>`);
+    },
     configureServer(server) {
       attachApiMiddlewares(server);
     },

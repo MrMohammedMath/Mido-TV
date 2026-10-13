@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchDirectory } from './services/fileScanner';
+import { fetchDirectory, getPlaybackHistory } from './services/fileScanner';
 import { useTvRemote } from './hooks/useTvRemote';
 import { Header } from './components/Header';
 import { FooterLegend } from './components/FooterLegend';
 import { Grid3x3 } from './components/Grid3x3';
 import { BackgroundVideo } from './components/BackgroundVideo';
 import { PlayerHUD } from './components/PlayerHUD';
+import { CurrentTimeClock } from './components/CurrentTimeClock';
 
 const ROOT_PATH = 'D:\\Film';
 
@@ -14,6 +15,20 @@ export default function App() {
   const [pathSegments, setPathSegments] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [playbackHistory, setPlaybackHistory] = useState(() => getPlaybackHistory());
+
+  // Listen to real-time playback updates and storage changes
+  useEffect(() => {
+    const handleUpdate = () => {
+      setPlaybackHistory(getPlaybackHistory());
+    };
+    window.addEventListener('mido-tv-playback-updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('mido-tv-playback-updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
 
   // Pagination & Focus
   const [currentPage, setCurrentPage] = useState(0);
@@ -27,6 +42,8 @@ export default function App() {
     isPlaying: false,
     currentTime: 0,
     duration: 0,
+    bufferedPercent: 0,
+    bufferRange: { startPercent: 0, endPercent: 0, forwardSeconds: 0 },
     aspectLabel: '16:9'
   });
 
@@ -369,6 +386,7 @@ export default function App() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 focusedSlotIndex={focusedSlotIndex}
+                playbackHistory={playbackHistory}
                 onItemClick={handleItemSelect}
               />
             )}
@@ -392,6 +410,17 @@ export default function App() {
           onGoBack={handleClosePlayer}
           onToggleFullscreen={toggleFullscreen}
         />
+      )}
+
+      {/* Small Current Clock Time Widget in Bottom Right Corner (Player View) */}
+      {isPlayerOpen && (
+        <div
+          className={`fixed bottom-6 right-8 z-50 pointer-events-none transition-opacity duration-500 ${
+            hudVisible ? 'opacity-100' : 'opacity-70'
+          }`}
+        >
+          <CurrentTimeClock />
+        </div>
       )}
     </div>
   );
